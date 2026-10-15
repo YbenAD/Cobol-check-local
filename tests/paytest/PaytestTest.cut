@@ -1,0 +1,28 @@
+           TestSuite "Tests du programme de paie PAYROL00"
+
+           TestCase "INITIALIZATION remplit le nom"
+           PERFORM INITIALIZATION
+           EXPECT WHO TO BE "Captain COBOL"
+
+           TestCase "INITIALIZATION remplit les heures et le taux"
+           PERFORM INITIALIZATION
+           EXPECT HOURS TO BE 19
+           EXPECT RATE TO BE 23
+
+           TestCase "COMPUTE-GROSS-PAY : 19 heures x 23 = 437"
+           MOVE 19 TO HOURS
+           MOVE 23 TO RATE
+           PERFORM COMPUTE-GROSS-PAY
+           EXPECT GROSS-PAY TO BE 437
+
+           TestCase "COMPUTE-GROSS-PAY : 0 heure donne 0"
+           MOVE 0 TO HOURS
+           MOVE 50 TO RATE
+           PERFORM COMPUTE-GROSS-PAY
+           EXPECT GROSS-PAY TO BE 0
+
+           TestCase "COMPUTE-GROSS-PAY : 40 heures x 100 = 4000"
+           MOVE 40 TO HOURS
+           MOVE 100 TO RATE
+           PERFORM COMPUTE-GROSS-PAY
+           EXPECT GROSS-PAY TO BE 4000

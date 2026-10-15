@@ -1,0 +1,77 @@
+IDENTIFICATION DIVISION.
+    PROGRAM-ID. leMenu.
+
+ENVIRONMENT DIVISION.
+    INPUT-OUTPUT SECTION.
+    FILE-CONTROL.
+
+DATA DIVISION.
+    WORKING-STORAGE SECTION.
+    77 WS-OPTION PIC 9.
+
+    77 OPTION-VALIDITY PIC 9.
+        88 OPTION-VALID VALUE 1 THRU 3 FALSE 0.
+
+PROCEDURE DIVISION.
+    MAIN SECTION.
+        DISPLAY "-------Menu Principal---------"
+        AT LINE 6 COLUMN 29
+        WITH BACKGROUND-COLOR 0
+             FOREGROUND-COLOR 6
+             HIGHLIGHT.
+
+        DISPLAY " 1. SHOW CREDITS  "
+        AT LINE 8 COLUMN 29
+        WITH BACKGROUND-COLOR 0
+             FOREGROUND-COLOR 5
+             HIGHLIGHT.
+
+        DISPLAY " 2. SHOW HELLO WORD"
+        AT LINE 9 COLUMN 29
+        WITH BACKGROUND-COLOR 0
+             FOREGROUND-COLOR 5
+             HIGHLIGHT.  
+
+        DISPLAY " 3. QUIT APPLICATION"
+        AT LINE 10 COLUMN 29
+        WITH BACKGROUND-COLOR 0
+             FOREGROUND-COLOR 5
+             HIGHLIGHT.   
+
+        DISPLAY "MAKE A CHOICE: "
+        AT LINE 12 COLUMN 29
+        WITH BACKGROUND-COLOR 0
+             FOREGROUND-COLOR 7
+             HIGHLIGHT.
+
+    WORKING-CYCLE.
+        PERFORM UNTIL OPTION-VALID
+            ACCEPT WS-OPTION
+                AT LINE 12 COLUMN 44
+                ON EXCEPTION CONTINUE
+                NOT ON EXCEPTION PERFORM CHECK-OPTION
+            END-ACCEPT
+        END-PERFORM.
+
+    CHECK-OPTION.
+        EVALUATE WS-OPTION
+            WHEN 1
+                PERFORM SHOW-CREDITS
+            WHEN 2
+                PERFORM SHOW-HELLO-WORLD
+            WHEN 3
+                PERFORM QUIT-APPLICATION 
+            WHEN OTHER
+                DISPLAY "INVALID OPTION. PLEASE TRY AGAIN."
+        END-EVALUATE.
+
+    SHOW-CREDITS.
+        DISPLAY "CREDITS: This application was developed by OpenAI." AT LINE 2 COLUMN 2.
+
+    SHOW-HELLO-WORLD.
+        DISPLAY "HELLO, WORLD!, YOU ARE WELCOME" AT LINE 2 COLUMN 2.
+
+    QUIT-APPLICATION.
+        DISPLAY "Thank you for using the application. Goodbye!" AT LINE 2 COLUMN 2
+        STOP RUN.
+        

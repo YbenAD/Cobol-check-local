@@ -1,0 +1,13 @@
+# Tout ignorer par défaut (dont les exécutables compilés sans extension)
+*
+# ... sauf les dossiers
+!*/
+# ... et les types de fichiers utiles
+!*.cob
+!*.cbl
+!*.cpy
+!*.cut
+!*.txt
+!*.dat
+!*.yml
+!.gitignore

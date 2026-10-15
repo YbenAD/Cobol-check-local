@@ -1,0 +1,94 @@
+# .github/workflows/cobol-check.yml
+# Tests unitaires COBOL avec cobol-check + GnuCOBOL
+#
+# Organisation du dépôt :
+#   fiche_contact/paytest.cob        <- vos programmes, là où ils sont déjà
+#   tests/paytest/PaytestTest.cut    <- un dossier par programme testé,
+#                                       du même nom que le fichier source
+# Seuls les programmes qui ont un dossier dans tests/ sont testés.
+
+name: COBOL - Tests unitaires
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  cobol-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer GnuCOBOL et Java
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnucobol openjdk-17-jre-headless unzip
+          cobc --version | head -1
+          java -version
+
+      - name: Installer cobol-check
+        run: |
+          git clone --depth 1 https://github.com/openmainframeproject/cobol-check.git /tmp/cc-src
+          unzip -q /tmp/cc-src/build/distributions/cobol-check-*.zip -d "$HOME/cobolcheck"
+          cd "$HOME/cobolcheck"
+          # Corriger les fins de ligne Windows et rendre le script exécutable
+          sed -i 's/\r$//' scripts/linux_gnucobol_run_tests
+          chmod +x scripts/linux_gnucobol_run_tests
+          ls bin/
+
+      - name: Lancer les tests
+        run: |
+          CC="$HOME/cobolcheck"
+          JAR=$(ls "$CC"/bin/cobol-check-*.jar | head -1)
+          mkdir -p resultats
+          status=0
+
+          for testdir in tests/*/; do
+            prog=$(basename "$testdir")
+
+            # Retrouver le source du programme n'importe où dans le dépôt
+            src=$(find . -path ./tests -prune -o -type f \
+                  \( -name "$prog.cob" -o -name "$prog.cbl" \
+                     -o -name "$prog.COB" -o -name "$prog.CBL" \) -print | head -1)
+            if [ -z "$src" ]; then
+              echo "::error::Source introuvable pour le programme $prog"
+              status=1
+              continue
+            fi
+
+            echo "::group::Tests de $prog ($src)"
+            mkdir -p "$CC/src/test/cobol/$prog"
+            cp "$src" "$CC/src/main/cobol/"
+            cp "$testdir"*.cut "$CC/src/test/cobol/$prog/"
+
+            (cd "$CC" && java -jar "$JAR" -p "$prog")
+
+            cp "$CC/testruns/testResults.txt" "resultats/$prog.txt"
+            cat "resultats/$prog.txt"
+            echo "::endgroup::"
+
+            # cobol-check renvoie toujours 0 : on lit le résultat nous-mêmes
+            if ! grep -qE '^[[:space:]]*0 FAILED' "resultats/$prog.txt"; then
+              echo "::error::Des tests ont échoué (ou n'ont pas tourné) pour $prog"
+              status=1
+            fi
+
+            # Résumé affiché sur la page du run GitHub
+            echo "### $prog" >> "$GITHUB_STEP_SUMMARY"
+            grep -E 'EXECUTED|PASSED|FAILED' "resultats/$prog.txt" \
+              | sed 's/^/- /' >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          exit $status
+
+      - name: Publier les résultats
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultats-cobol-check
+          path: resultats/
