@@ -1,13 +1,13 @@
 # .github/workflows/cobol-check.yml
-# Tests unitaires COBOL avec cobol-check + GnuCOBOL
+# Pipeline COBOL : compilation de tous les programmes + tests unitaires cobol-check
 #
 # Organisation du dépôt :
-#   fiche_contact/paytest.cob        <- vos programmes, là où ils sont déjà
-#   tests/paytest/PaytestTest.cut    <- un dossier par programme testé,
-#                                       du même nom que le fichier source
-# Seuls les programmes qui ont un dossier dans tests/ sont testés.
+#   */*.cob                          <- vos programmes, dans leurs dossiers
+#   tests/<programme>/*.cut          <- tests cobol-check (même nom que le source)
+#   compile.sh                       <- script de compilation (utilisable en local)
+#   .cobolignore                     <- optionnel : programmes à ne pas compiler
 
-name: COBOL - Tests unitaires
+name: COBOL - Compilation et tests
 
 on:
   push:
@@ -17,9 +17,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  cobol-check:
+  # ---------------------------------------------------------------
+  # 1. Tous les programmes doivent compiler
+  # ---------------------------------------------------------------
+  compilation:
     runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
 
+      - name: Installer GnuCOBOL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnucobol
+          cobc --version | head -1
+
+      - name: Compiler tous les programmes
+        run: bash compile.sh
+
+  # ---------------------------------------------------------------
+  # 2. Tests unitaires des programmes qui ont un dossier dans tests/
+  # ---------------------------------------------------------------
+  tests-unitaires:
+    runs-on: ubuntu-latest
     steps:
       - name: Récupérer le code
         uses: actions/checkout@v4
@@ -36,10 +56,8 @@ jobs:
           git clone --depth 1 https://github.com/openmainframeproject/cobol-check.git /tmp/cc-src
           unzip -q /tmp/cc-src/build/distributions/cobol-check-*.zip -d "$HOME/cobolcheck"
           cd "$HOME/cobolcheck"
-          # Corriger les fins de ligne Windows et rendre le script exécutable
           sed -i 's/\r$//' scripts/linux_gnucobol_run_tests
           chmod +x scripts/linux_gnucobol_run_tests
-          ls bin/
 
       - name: Lancer les tests
         run: |
@@ -51,7 +69,6 @@ jobs:
           for testdir in tests/*/; do
             prog=$(basename "$testdir")
 
-            # Retrouver le source du programme n'importe où dans le dépôt
             src=$(find . -path ./tests -prune -o -type f \
                   \( -name "$prog.cob" -o -name "$prog.cbl" \
                      -o -name "$prog.COB" -o -name "$prog.CBL" \) -print | head -1)
@@ -60,9 +77,15 @@ jobs:
               status=1
               continue
             fi
+            if ! ls "$testdir"*.cut >/dev/null 2>&1; then
+              echo "::error::Aucun fichier .cut dans $testdir"
+              status=1
+              continue
+            fi
 
             echo "::group::Tests de $prog ($src)"
             mkdir -p "$CC/src/test/cobol/$prog"
+            rm -f "$CC/src/test/cobol/$prog/"*.cut
             cp "$src" "$CC/src/main/cobol/"
             cp "$testdir"*.cut "$CC/src/test/cobol/$prog/"
 
@@ -78,8 +101,7 @@ jobs:
               status=1
             fi
 
-            # Résumé affiché sur la page du run GitHub
-            echo "### $prog" >> "$GITHUB_STEP_SUMMARY"
+            echo "### Tests : $prog" >> "$GITHUB_STEP_SUMMARY"
             grep -E 'EXECUTED|PASSED|FAILED' "resultats/$prog.txt" \
               | sed 's/^/- /' >> "$GITHUB_STEP_SUMMARY"
           done
