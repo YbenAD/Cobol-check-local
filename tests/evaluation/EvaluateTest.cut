@@ -1,0 +1,49 @@
+           TestSuite "Tests du programme Eva_luate"
+
+           TestCase "alimentation initialise la valeur a 1"
+           PERFORM alimentation
+           EXPECT ws-valeur TO BE 1
+
+           TestCase "alimentation positionne le drapeau sur cont"
+           PERFORM alimentation
+           EXPECT ws-true TO BE TRUE
+
+           TestCase "evaluate : valeur 1"
+           MOVE 1 TO ws-valeur
+           PERFORM traitement-principal
+           EXPECT ws-message TO BE "valeur = 1"
+
+           TestCase "evaluate : valeur 3"
+           MOVE 3 TO ws-valeur
+           PERFORM traitement-principal
+           EXPECT ws-message TO BE "valeur = 3"
+
+           TestCase "evaluate : valeur 5"
+           MOVE 5 TO ws-valeur
+           PERFORM traitement-principal
+           EXPECT ws-message TO BE "valeur = 5"
+
+           TestCase "evaluate : valeur 9 passe dans WHEN OTHER"
+           MOVE 9 TO ws-valeur
+           PERFORM traitement-principal
+           EXPECT ws-message TO BE "valeur autre que 1,2,3,4,5"
+
+           TestCase "traitement incremente le compteur"
+           SET ws-true TO TRUE
+           MOVE 0 TO ws-cpt
+           PERFORM traitement
+           EXPECT ws-cpt TO BE 1
+           EXPECT ws-true TO BE TRUE
+
+           TestCase "traitement passe le drapeau a stop quand cpt = 5"
+           SET ws-true TO TRUE
+           MOVE 4 TO ws-cpt
+           PERFORM traitement
+           EXPECT ws-cpt TO BE 5
+           EXPECT ws-false TO BE TRUE
+
+           TestCase "la boucle tourne exactement 5 fois"
+           PERFORM alimentation
+           MOVE 0 TO ws-cpt
+           PERFORM traitement UNTIL ws-false
+           EXPECT ws-cpt TO BE 5
