@@ -1,0 +1,26 @@
+           TestSuite "Tests du programme Airesperi"
+
+           TestCase "INITIALISATION remplit les dimensions"
+           PERFORM INITIALISATION
+           EXPECT WS-LONGUEUR TO BE 10
+           EXPECT WS-LARGEUR TO BE 5
+
+           TestCase "CALCULS : 10 x 5"
+           PERFORM INITIALISATION
+           PERFORM CALCULS
+           EXPECT WS-SURFACE TO BE 50
+           EXPECT WS-PERIMETRE TO BE 30
+
+           TestCase "CALCULS : 0 x 5"
+           MOVE 0 TO WS-LONGUEUR
+           MOVE 5 TO WS-LARGEUR
+           PERFORM CALCULS
+           EXPECT WS-SURFACE TO BE 0
+           EXPECT WS-PERIMETRE TO BE 10
+
+           TestCase "CALCULS : 21 x 16"
+           MOVE 21 TO WS-LONGUEUR
+           MOVE 16 TO WS-LARGEUR
+           PERFORM CALCULS
+           EXPECT WS-SURFACE TO BE 336
+           EXPECT WS-PERIMETRE TO BE 74
