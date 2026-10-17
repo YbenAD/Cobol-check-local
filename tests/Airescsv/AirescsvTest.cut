@@ -1,0 +1,60 @@
+           TestSuite "Tests du programme Airescsv (lecture CSV)"
+
+           TestCase "DECOUPER-LIGNE : separateur virgule"
+           MOVE "10,5" TO WS-LIGNE
+           PERFORM DECOUPER-LIGNE
+           EXPECT WS-LONGUEUR TO BE 10
+           EXPECT WS-LARGEUR TO BE 5
+
+           TestCase "DECOUPER-LIGNE : separateur point-virgule"
+           MOVE "21;16" TO WS-LIGNE
+           PERFORM DECOUPER-LIGNE
+           EXPECT WS-LONGUEUR TO BE 21
+           EXPECT WS-LARGEUR TO BE 16
+
+           TestCase "DECOUPER-LIGNE : ligne Windows (CRLF)"
+           MOVE SPACES TO WS-LIGNE
+           STRING "7,3" X"0D" DELIMITED BY SIZE INTO WS-LIGNE
+           PERFORM DECOUPER-LIGNE
+           EXPECT WS-LONGUEUR TO BE 7
+           EXPECT WS-LARGEUR TO BE 3
+
+           TestCase "CALCULS : 12 x 12"
+           MOVE 0 TO WS-TOTAL-SURFACE
+           MOVE 12 TO WS-LONGUEUR
+           MOVE 12 TO WS-LARGEUR
+           PERFORM CALCULS
+           EXPECT WS-PERIMETRE TO BE 48
+           EXPECT WS-SURFACE TO BE 144
+
+      *    Le fichier est simule : LIRE-LIGNE renvoie 2 figures
+           TestCase "TRAITER-FICHIER : fichier de 2 figures"
+           MOVE 0 TO WS-NB-FIGURES
+           MOVE 0 TO WS-TOTAL-SURFACE
+           SET WS-PAS-FIN TO TRUE
+           MOCK PARAGRAPH LIRE-LIGNE
+               EVALUATE WS-NB-FIGURES
+                   WHEN 0
+                       MOVE "10,5" TO WS-LIGNE
+                   WHEN 1
+                       MOVE "21,16" TO WS-LIGNE
+                   WHEN OTHER
+                       SET WS-FIN TO TRUE
+               END-EVALUATE
+           END-MOCK
+           PERFORM TRAITER-FICHIER
+           EXPECT WS-NB-FIGURES TO BE 2
+           EXPECT WS-TOTAL-SURFACE TO BE 386
+           VERIFY PARAGRAPH LIRE-LIGNE HAPPENED 3 TIMES
+
+      *    Fichier vide (en-tete seul) : aucune figure
+           TestCase "TRAITER-FICHIER : fichier vide"
+           MOVE 0 TO WS-NB-FIGURES
+           MOVE 0 TO WS-TOTAL-SURFACE
+           SET WS-PAS-FIN TO TRUE
+           MOCK PARAGRAPH LIRE-LIGNE
+               SET WS-FIN TO TRUE
+           END-MOCK
+           PERFORM TRAITER-FICHIER
+           EXPECT WS-NB-FIGURES TO BE 0
+           EXPECT WS-TOTAL-SURFACE TO BE 0
