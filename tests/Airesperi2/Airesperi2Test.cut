@@ -1,0 +1,39 @@
+           TestSuite "Tests du programme Airesperi"
+
+      *    La saisie clavier est remplacee par des valeurs fixes
+           TestCase "TRAITEMENT : saisie 10 et 5"
+           MOCK PARAGRAPH SAISIE
+               MOVE 10 TO WS-LONGUEUR
+               MOVE 5 TO WS-LARGEUR
+           END-MOCK
+           PERFORM TRAITEMENT
+           EXPECT WS-SURFACE TO BE 50
+           EXPECT WS-PERIMETRE TO BE 30
+           VERIFY PARAGRAPH SAISIE HAPPENED ONCE
+
+           TestCase "TRAITEMENT : saisie 0 et 5"
+           MOCK PARAGRAPH SAISIE
+               MOVE 0 TO WS-LONGUEUR
+               MOVE 5 TO WS-LARGEUR
+           END-MOCK
+           PERFORM TRAITEMENT
+           EXPECT WS-SURFACE TO BE 0
+           EXPECT WS-PERIMETRE TO BE 10
+
+           TestCase "TRAITEMENT : saisie 21 et 16"
+           MOCK PARAGRAPH SAISIE
+               MOVE 21 TO WS-LONGUEUR
+               MOVE 16 TO WS-LARGEUR
+           END-MOCK
+           PERFORM TRAITEMENT
+           EXPECT WS-SURFACE TO BE 336
+           EXPECT WS-PERIMETRE TO BE 74
+
+           TestCase "TRAITEMENT : saisie maximale 99 et 99"
+           MOCK PARAGRAPH SAISIE
+               MOVE 99 TO WS-LONGUEUR
+               MOVE 99 TO WS-LARGEUR
+           END-MOCK
+           PERFORM TRAITEMENT
+           EXPECT WS-SURFACE TO BE 9801
+           EXPECT WS-PERIMETRE TO BE 396
